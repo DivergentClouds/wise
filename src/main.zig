@@ -214,7 +214,10 @@ fn interpret(
                 x_stack +%= 1;
             },
             .cycle_registers => {
-                a_register = @intCast((@as(u3, 1) + a_register) % 3);
+                if (a_register == 0)
+                    a_register = 2
+                else
+                    a_register -= 1;
             },
             .push_a => {
                 try push(
