@@ -242,9 +242,12 @@ fn interpret(
                 );
             },
             .skip_block => {
-                if (registers[getRegisterId(.a, a_register)] <=
-                    registers[getRegisterId(.b, a_register)])
-                {
+                if (try checkLeq(
+                    registers[getRegisterId(.a, a_register)],
+                    registers[getRegisterId(.b, a_register)],
+                    registers[getRegisterId(.c, a_register)],
+                    base,
+                )) {
                     var depth: usize = 1;
                     while (program_reader.readByte() catch null) |inner_byte| : ({
                         if (depth == 0) break;
@@ -266,9 +269,12 @@ fn interpret(
                 }
             },
             .loop_block => {
-                if (registers[getRegisterId(.a, a_register)] >
-                    registers[getRegisterId(.b, a_register)])
-                {
+                if (try checkGt(
+                    registers[getRegisterId(.a, a_register)],
+                    registers[getRegisterId(.b, a_register)],
+                    registers[getRegisterId(.c, a_register)],
+                    base,
+                )) {
                     try seekable_program.seekTo(blocks.getLastOrNull() orelse 0);
                 }
             },
@@ -434,6 +440,29 @@ fn digitCount(a: Nat, base: Nat) !Nat {
         return 0;
 
     return std.math.log_int(Nat, base, a) + 1;
+}
+
+fn checkLeq(a: Nat, b: Nat, c: Nat, base: Nat) !bool {
+    var index: Nat = 0;
+    while (index < c) : (index += 1) {
+        if (try getDigit(a, base, index) > try getDigit(b, base, index)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+fn checkGt(a: Nat, b: Nat, c: Nat, base: Nat) !bool {
+    if (c == 0) return false;
+
+    var index: Nat = 0;
+    while (index < c) : (index += 1) {
+        if (try getDigit(a, base, index) <= try getDigit(b, base, index)) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 fn getDigit(
