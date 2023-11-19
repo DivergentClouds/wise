@@ -319,12 +319,14 @@ fn interpret(
 }
 
 fn getRegisterId(register_id: RegisterId, a_id: u2) u2 {
-    return @intCast((@as(u3, @intFromEnum(register_id)) + a_id) % 3);
+    const id_plus_offset: u3 = @intFromEnum(register_id) + a_id;
+    return @intCast(id_plus_offset % 3);
 }
 
 fn push(stack: *std.ArrayList(Nat), value: Nat) !void {
     try stack.append(value);
 }
+
 fn pop(stack: *std.ArrayList(Nat)) !Nat {
     return stack.popOrNull() orelse
         return error.StackUnderflow;
@@ -443,26 +445,40 @@ fn digitCount(a: Nat, base: Nat) !Nat {
 }
 
 fn checkLeq(a: Nat, b: Nat, c: Nat, base: Nat) !bool {
-    var index: Nat = 0;
-    while (index < c) : (index += 1) {
-        if (try getDigit(a, base, index) > try getDigit(b, base, index)) {
+    var index: Nat = c + 1;
+    while (index > 0) {
+        index -= 1;
+        const a_digit = try getDigit(a, base, index);
+        const b_digit = try getDigit(b, base, index);
+
+        if (a_digit > b_digit) {
             return false;
+        } else if (a_digit == b_digit) {
+            continue;
+        } else {
+            return true;
         }
     }
 
     return true;
 }
 fn checkGt(a: Nat, b: Nat, c: Nat, base: Nat) !bool {
-    if (c == 0) return false;
+    var index: Nat = c + 1;
+    while (index > 0) {
+        index -= 1;
+        const a_digit = try getDigit(a, base, index);
+        const b_digit = try getDigit(b, base, index);
 
-    var index: Nat = 0;
-    while (index < c) : (index += 1) {
-        if (try getDigit(a, base, index) <= try getDigit(b, base, index)) {
+        if (a_digit > b_digit) {
+            return true;
+        } else if (a_digit == b_digit) {
+            continue;
+        } else {
             return false;
         }
     }
 
-    return true;
+    return false;
 }
 
 fn getDigit(
